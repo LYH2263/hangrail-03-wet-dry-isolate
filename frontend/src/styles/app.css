@@ -188,6 +188,8 @@ a { color: inherit; text-decoration: none; }
   text-overflow: ellipsis;
 }
 .hang-tag-rail { opacity: .55; font-size: .6rem; }
+.hang-tag-body--dry { background: #e3ecf5; }
+.hang-tag-body--wet { background: #d8f0ee; }
 
 .hangframe-stage {
   flex: 1;
@@ -277,4 +279,34 @@ button {
   border: 1px solid #a8876a; color: #fff; font-size: 11px;
   display: flex; align-items: center; justify-content: center;
   padding: 0 4px; overflow: hidden; white-space: nowrap;
+}
+
+/* —— 干湿隔离 —— */
+.state-badge {
+  display: inline-block; font-size: .75rem; padding: .1rem .5rem; border-radius: 10px;
+  border: 1px solid;
+}
+.state-badge--dry { color: #9ec3e8; border-color: #3f6f9e; background: rgba(70,120,170,.14); }
+.state-badge--wet { color: #8fd6d0; border-color: #2f8b85; background: rgba(45,140,135,.16); }
+
+.rail-state {
+  display: inline-block; margin-left: .55rem; font-size: .7rem;
+  padding: .05rem .45rem; border-radius: 10px; border: 1px solid;
+}
+.rail-state--dry { color: #9ec3e8; border-color: #3f6f9e; background: rgba(70,120,170,.14); }
+.rail-state--wet { color: #8fd6d0; border-color: #2f8b85; background: rgba(45,140,135,.16); }
+.rail-state--empty { color: var(--hang-muted); border-color: var(--line); }
+
+.seg--dry { background: #4a5a78; border-color: #8fb0d8; }
+.seg--wet { background: #2f6f6a; border-color: #7fcfc8; }
+.seg-state { font-weight: 800; margin-right: 3px; opacity: .85; }
+
+.err--isolation {
+  border: 1px solid #a05040; background: #3a1810; border-radius: 6px;
+  padding: .6rem .75rem; color: #ffb0a0;
+}
+.err-tag {
+  display: inline-block; margin-right: .5rem; padding: .05rem .45rem;
+  border-radius: 3px; background: #a05040; color: #1a0806;
+  font-weight: 800; font-size: .75rem;
 }

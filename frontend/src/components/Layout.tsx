@@ -15,7 +15,8 @@ type Occ = {
   rail_id: number;
   label: string;
   length_cm: number;
-  segments: { ticket_code: string; garment_name: string; start_cm: number; end_cm: number }[];
+  rail_dry_state: string | null;
+  segments: { ticket_code: string; garment_name: string; dry_state: string | null; start_cm: number; end_cm: number }[];
 };
 type Order = { id: number; ticket_code: string; garment_name: string; status: string; due_at?: string };
 
@@ -102,13 +103,13 @@ export default function Layout() {
                 key={`${t.ticket_code}-${i}`}
                 className="hang-tag"
                 style={{ marginLeft: i === 0 ? `${Math.min(t.left, 40)}%` : undefined }}
-                title={`${t.rail} ${t.start_cm}-${t.end_cm}cm`}
+                title={`${t.rail} ${t.start_cm}-${t.end_cm}cm · ${t.dry_state === "wet" ? "湿衣" : "干衣"}`}
               >
                 <div className="hang-tag-hook" />
-                <div className="hang-tag-body">
+                <div className={`hang-tag-body ${t.dry_state === "wet" ? "hang-tag-body--wet" : "hang-tag-body--dry"}`}>
                   <div className="hang-tag-code">{t.ticket_code}</div>
                   <div className="hang-tag-name">{t.garment_name}</div>
-                  <div className="hang-tag-rail">{t.rail}</div>
+                  <div className="hang-tag-rail">{t.rail} · {t.dry_state === "wet" ? "湿" : "干"}</div>
                 </div>
               </div>
             ))}

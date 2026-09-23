@@ -18,11 +18,11 @@ def seed_if_empty(db: Session) -> None:
     db.flush()
     now = datetime.utcnow()
     orders = [
-        WorkOrder(store_id=store.id, ticket_code="HR-2001", garment_name="羊毛大衣", length_cm=45, status="hung", due_at=now + timedelta(days=1), hung_at=now - timedelta(hours=5)),
-        WorkOrder(store_id=store.id, ticket_code="HR-2002", garment_name="西装套装", length_cm=35, status="hung", due_at=now + timedelta(days=2), hung_at=now - timedelta(hours=3)),
-        WorkOrder(store_id=store.id, ticket_code="HR-2003", garment_name="羽绒服", length_cm=50, status="ready", due_at=now + timedelta(days=1)),
+        WorkOrder(store_id=store.id, ticket_code="HR-2001", garment_name="羊毛大衣", length_cm=45, dry_state="dry", status="hung", due_at=now + timedelta(days=1), hung_at=now - timedelta(hours=5)),
+        WorkOrder(store_id=store.id, ticket_code="HR-2002", garment_name="西装套装", length_cm=35, dry_state="dry", status="hung", due_at=now + timedelta(days=2), hung_at=now - timedelta(hours=3)),
+        WorkOrder(store_id=store.id, ticket_code="HR-2003", garment_name="羽绒服", length_cm=50, dry_state="wet", status="ready", due_at=now + timedelta(days=1)),
         WorkOrder(store_id=store.id, ticket_code="HR-2004", garment_name="连衣裙", length_cm=30, status="ready", due_at=now - timedelta(days=1)),
-        WorkOrder(store_id=store.id, ticket_code="HR-2005", garment_name="风衣", length_cm=40, status="hung", due_at=now - timedelta(hours=12), hung_at=now - timedelta(days=3)),
+        WorkOrder(store_id=store.id, ticket_code="HR-2005", garment_name="风衣", length_cm=40, dry_state="wet", status="hung", due_at=now - timedelta(hours=12), hung_at=now - timedelta(days=3)),
     ]
     db.add_all(orders)
     db.flush()
