@@ -30,6 +30,8 @@ class WorkOrder(Base):
     ticket_code: Mapped[str] = mapped_column(String(40), unique=True)
     garment_name: Mapped[str] = mapped_column(String(80))
     length_cm: Mapped[float] = mapped_column(Float)
+    # dry/wet; NULL only on legacy rows, which are treated as dry-compatible.
+    garment_state: Mapped[str | None] = mapped_column(String(8), nullable=True, default="dry")
     status: Mapped[str] = mapped_column(String(20), default="ready")  # ready/hung/picked/overdue
     due_at: Mapped[datetime] = mapped_column(DateTime)
     hung_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

@@ -278,3 +278,43 @@ button {
   display: flex; align-items: center; justify-content: center;
   padding: 0 4px; overflow: hidden; white-space: nowrap;
 }
+
+/* —— wet/dry isolation —— */
+.hint { font-size: .82rem; color: var(--hang-muted); margin: 0 0 1rem; }
+.state-tag {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: .22rem .4rem;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.state-tag--dry { background: #6b4f3a; color: #ffe9d2; border: 1px solid #a8876a; }
+.state-tag--wet { background: #274b5e; color: #d6eefc; border: 1px solid #5b93b4; }
+.state-tag--empty { background: transparent; color: var(--hang-muted); border: 1px dashed #5a4a3a; }
+
+.seg--dry { background: var(--seg); border-color: #a8876a; }
+.seg--wet {
+  background: linear-gradient(180deg, #35647e, #23465c);
+  border: 1px solid #6fa3c4;
+}
+
+.hang-tag--wet .hang-tag-body { background: #dcecf5; }
+.hang-tag-state { font-size: .58rem; font-weight: 800; letter-spacing: .1em; opacity: .85; }
+.hang-tag-state--dry { color: #7a5238; }
+.hang-tag-state--wet { color: #2a5a78; }
+
+.err--isolate {
+  display: flex; align-items: center; gap: .5rem;
+  background: rgba(150, 60, 40, .12);
+  border: 1px solid #a05040;
+  border-radius: 6px;
+  padding: .6rem .75rem;
+}
+.err-badge {
+  flex: 0 0 auto;
+  background: #c0503a; color: #fff;
+  font-size: .7rem; font-weight: 800;
+  padding: .15rem .45rem; border-radius: 3px;
+}

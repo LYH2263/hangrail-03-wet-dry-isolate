@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { api } from "../api/client";
+import { STATE_LABEL, api } from "../api/client";
 
 const icons = [
   { to: "/occupancy", icon: "━", label: "占位" },
@@ -15,7 +15,8 @@ type Occ = {
   rail_id: number;
   label: string;
   length_cm: number;
-  segments: { ticket_code: string; garment_name: string; start_cm: number; end_cm: number }[];
+  states: ("dry" | "wet")[];
+  segments: { ticket_code: string; garment_name: string; garment_state: "dry" | "wet"; start_cm: number; end_cm: number }[];
 };
 type Order = { id: number; ticket_code: string; garment_name: string; status: string; due_at?: string };
 
@@ -100,14 +101,15 @@ export default function Layout() {
             {hangTags.slice(0, 14).map((t, i) => (
               <div
                 key={`${t.ticket_code}-${i}`}
-                className="hang-tag"
+                className={`hang-tag hang-tag--${t.garment_state}`}
                 style={{ marginLeft: i === 0 ? `${Math.min(t.left, 40)}%` : undefined }}
-                title={`${t.rail} ${t.start_cm}-${t.end_cm}cm`}
+                title={`${t.rail} ${STATE_LABEL[t.garment_state]} ${t.start_cm}-${t.end_cm}cm`}
               >
                 <div className="hang-tag-hook" />
                 <div className="hang-tag-body">
                   <div className="hang-tag-code">{t.ticket_code}</div>
                   <div className="hang-tag-name">{t.garment_name}</div>
+                  <div className={`hang-tag-state hang-tag-state--${t.garment_state}`}>{STATE_LABEL[t.garment_state]}</div>
                   <div className="hang-tag-rail">{t.rail}</div>
                 </div>
               </div>

@@ -11,11 +11,17 @@ from app.schemas.schemas import (
     OccupancyOut,
     OccupancySeg,
     OrderOut,
+    OrderUpdate,
     PickupRequest,
     RailOut,
     StoreOut,
 )
-from app.services.rail_engine import Segment, first_fit
+from app.services.rail_engine import (
+    Segment,
+    first_fit,
+    normalize_state,
+    states_compatible,
+)
 
 api_router = APIRouter()
 
@@ -40,6 +46,21 @@ def orders(db: Session = Depends(get_db)):
     return db.scalars(select(WorkOrder).order_by(WorkOrder.id.desc())).all()
 
 
+@api_router.patch("/orders/{order_id}", response_model=OrderOut)
+def update_order(order_id: int, body: OrderUpdate, db: Session = Depends(get_db)):
+    order = db.get(WorkOrder, order_id)
+    if not order:
+        raise HTTPException(404, "工单不存在")
+    # A hanging garment already defines its rail's wet/dry set; flipping it
+    # mid-hang would silently mix states on the rail.
+    if order.status == "hung":
+        raise HTTPException(400, "已上杆工单不可修改干湿属性，请先取件释放")
+    order.garment_state = body.garment_state
+    db.commit()
+    db.refresh(order)
+    return order
+
+
 @api_router.get("/occupancy/{rail_id}", response_model=OccupancyOut)
 def occupancy(rail_id: int, db: Session = Depends(get_db)):
     rail = db.get(HangRail, rail_id)
@@ -49,21 +70,31 @@ def occupancy(rail_id: int, db: Session = Depends(get_db)):
         select(RailPlacement).where(RailPlacement.rail_id == rail_id, RailPlacement.active == 1)
     ).all()
     segs = []
+    states: set[str] = set()
     for p in placements:
         order = db.get(WorkOrder, p.order_id)
         if not order:
             continue
+        state = normalize_state(order.garment_state)
+        states.add(state)
         segs.append(
             OccupancySeg(
                 order_id=order.id,
                 ticket_code=order.ticket_code,
                 garment_name=order.garment_name,
+                garment_state=state,
                 start_cm=p.start_cm,
                 end_cm=p.end_cm,
             )
         )
     segs.sort(key=lambda s: s.start_cm)
-    return OccupancyOut(rail_id=rail.id, label=rail.label, length_cm=rail.length_cm, segments=segs)
+    return OccupancyOut(
+        rail_id=rail.id,
+        label=rail.label,
+        length_cm=rail.length_cm,
+        states=sorted(states),
+        segments=segs,
+    )
 
 
 @api_router.post("/hang", response_model=OrderOut)
@@ -80,13 +111,30 @@ def hang(body: HangRequest, db: Session = Depends(get_db)):
     if not rails:
         raise HTTPException(404, "无可用挂杆")
 
+    want_state = normalize_state(order.garment_state)
+    state_cn = {"dry": "干衣", "wet": "湿衣"}
+    # Rails rejected specifically by wet/dry isolation vs. plain lack of space.
+    isolation_blocks: list[str] = []
+    space_blocks: list[str] = []
+
     for rail in rails:
         active = db.scalars(
             select(RailPlacement).where(RailPlacement.rail_id == rail.id, RailPlacement.active == 1)
         ).all()
-        occupied = [Segment(p.start_cm, p.end_cm) for p in active]
+        occupied: list[Segment] = []
+        occupant_states: list[str] = []
+        for p in active:
+            occupied.append(Segment(p.start_cm, p.end_cm))
+            occ_order = db.get(WorkOrder, p.order_id)
+            if occ_order:
+                occupant_states.append(normalize_state(occ_order.garment_state))
+        if any(not states_compatible(want_state, s) for s in occupant_states):
+            other = next(s for s in occupant_states if s != want_state)
+            isolation_blocks.append(f"{rail.label}（已挂{state_cn[other]}）")
+            continue
         place = first_fit(rail.length_cm, occupied, order.length_cm)
         if place is None:
+            space_blocks.append(rail.label)
             continue
         db.add(
             RailPlacement(
@@ -102,7 +150,23 @@ def hang(body: HangRequest, db: Session = Depends(get_db)):
         db.refresh(order)
         return order
 
-    raise HTTPException(409, "挂杆空间不足")
+    detail_parts = []
+    if isolation_blocks:
+        detail_parts.append(
+            f"干湿隔离冲突：{state_cn[want_state]}不得与{'湿衣' if want_state == 'dry' else '干衣'}同杆 → "
+            f"{'、'.join(isolation_blocks)}"
+        )
+    if space_blocks:
+        detail_parts.append(f"空间不足：{'、'.join(space_blocks)}")
+    raise HTTPException(
+        409,
+        {
+            "code": "isolation_conflict" if isolation_blocks else "no_space",
+            "message": "；".join(detail_parts) or "挂杆空间不足",
+            "isolation_rails": isolation_blocks,
+            "space_rails": space_blocks,
+        },
+    )
 
 
 @api_router.post("/pickup", response_model=OrderOut)
